@@ -5,8 +5,9 @@ Spring Boot basiertes Beispielprojekt für einen Nerdshirt-Webshop inklusive Aut
 ## Features
 
 - Spring Boot 3 (Java 17) REST-API
-- Spring Security mit Passwort-Hashing und Basic Auth
-- Beispielprodukte und Admin-Account werden automatisch angelegt
+- Bootstrap-basiertes Thymeleaf-Frontend mit Produktübersicht und Detailseiten
+- Spring Security mit Formular-Login, Passwort-Hashing und Basic Auth für die API
+- Beispielprodukte (8 Stück) und Admin-Account werden automatisch angelegt
 - Persistenz mit PostgreSQL (Docker) bzw. H2 In-Memory (lokal)
 - Dockerfile und docker-compose für reproduzierbare Umgebung
 - Skript zum Erzeugen eines auslieferbaren ZIP-Archivs
@@ -17,7 +18,7 @@ Spring Boot basiertes Beispielprojekt für einen Nerdshirt-Webshop inklusive Aut
 mvn spring-boot:run
 ```
 
-Anschließend steht die API unter `http://localhost:8080` bereit.
+Die Web-Oberfläche erreichst du unter `http://localhost:8080`. Die REST-API ist weiterhin unter `/api` verfügbar.
 
 ## Docker Compose
 
@@ -26,6 +27,13 @@ docker-compose up --build
 ```
 
 Die Anwendung verwendet automatisch das Profil `docker` und verbindet sich mit der PostgreSQL-Datenbank aus `docker-compose.yml`.
+
+## Web-Oberfläche
+
+- `GET /` – Produktübersicht mit Karten-Layout
+- `GET /products/{id}` – Produktdetailseite
+- `GET /login` – Login-Formular für bestehende Konten
+- `GET /register` – Registrierungs-Formular mit Passwortvalidierung
 
 ## Beispiel-Endpunkte
 

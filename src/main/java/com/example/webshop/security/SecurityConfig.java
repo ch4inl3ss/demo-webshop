@@ -4,6 +4,7 @@ import com.example.webshop.user.AppUserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,12 +29,21 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/products", "/api/products/*", "/actuator/health").permitAll()
+                        .requestMatchers(
+                                "/", "/products/**", "/login", "/register",
+                                "/css/**", "/js/**", "/images/**", "/webjars/**"
+                        ).permitAll()
+                        .requestMatchers("/api/products/**", "/actuator/health").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                         .anyRequest().authenticated()
                 )
-                .httpBasic(basic -> {})
-                .formLogin(form -> form.disable());
+                .httpBasic(Customizer.withDefaults())
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/", false)
+                        .permitAll()
+                )
+                .logout(logout -> logout.logoutSuccessUrl("/login?logout"));
         return http.build();
     }
 
