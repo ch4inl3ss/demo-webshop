@@ -12,6 +12,7 @@ import com.yubico.webauthn.FinishAssertionOptions;
 import com.yubico.webauthn.FinishRegistrationOptions;
 import com.yubico.webauthn.RegisteredCredential;
 import com.yubico.webauthn.RegistrationFailedException;
+import com.yubico.webauthn.RegistrationResult;
 import com.yubico.webauthn.RelyingParty;
 import com.yubico.webauthn.StartAssertionOptions;
 import com.yubico.webauthn.StartRegistrationOptions;
@@ -86,8 +87,8 @@ public class PasskeyService {
                 .authenticatorSelection(selection)
                 .excludeCredentials(descriptors)
                 .build();
-        var start = relyingParty.startRegistration(options);
-        return persistAndConvert(user, start.getPublicKeyCredentialCreationOptions(), start.getPublicKeyCredentialCreationOptions(), PasskeyChallengeType.REGISTRATION);
+        PublicKeyCredentialCreationOptions creationOptions = relyingParty.startRegistration(options);
+        return persistAndConvert(user, creationOptions, creationOptions, PasskeyChallengeType.REGISTRATION);
     }
 
     public AppUser finishRegistration(PasskeyFinishRequest request) {
@@ -97,10 +98,19 @@ public class PasskeyService {
         PublicKeyCredentialCreationOptions options = readOptions(challenge.getOptionsJson(), PublicKeyCredentialCreationOptions.class);
         PublicKeyCredential<AuthenticatorAttestationResponse, ?> credential = parseAttestation(request.credential());
         try {
-            RegisteredCredential registered = relyingParty.finishRegistration(FinishRegistrationOptions.builder()
+            RegistrationResult result = relyingParty.finishRegistration(FinishRegistrationOptions.builder()
                     .request(options)
                     .response(credential)
                     .build());
+            if (!result.isSuccess()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passkey konnte nicht gespeichert werden");
+            }
+            RegisteredCredential registered = RegisteredCredential.builder()
+                    .credentialId(result.getKeyId().getId())
+                    .userHandle(new ByteArray(decode(user.getPasskeyHandle())))
+                    .publicKeyCose(result.getPublicKeyCose())
+                    .signatureCount(result.getSignatureCount())
+                    .build();
             credentialRepository.saveCredential(registered, user);
             challengeRepository.delete(challenge);
             return user;

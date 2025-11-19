@@ -1,6 +1,7 @@
 package com.example.webshop.passkey;
 
 import com.yubico.webauthn.RelyingParty;
+import com.yubico.webauthn.data.Origin;
 import com.yubico.webauthn.data.RelyingPartyIdentity;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -15,13 +16,19 @@ import java.util.stream.Collectors;
 public class PasskeyConfig {
 
     @Bean
-    RelyingParty relyingParty(PasskeyProperties properties, JpaCredentialRepository credentialRepository) throws MalformedURLException {
+    RelyingParty relyingParty(PasskeyProperties properties, JpaCredentialRepository credentialRepository) {
         RelyingPartyIdentity identity = RelyingPartyIdentity.builder()
                 .id(properties.getRpId())
                 .name(properties.getRpName())
                 .build();
-        Set<com.yubico.webauthn.data.Origin> origins = properties.getOrigins().stream()
-                .map(com.yubico.webauthn.data.Origin::create)
+        Set<Origin> origins = properties.getOrigins().stream()
+                .map(origin -> {
+                    try {
+                        return Origin.create(origin);
+                    } catch (Exception exception) {
+                        throw new IllegalArgumentException("Ungültige Origin: " + origin, exception);
+                    }
+                })
                 .collect(Collectors.toUnmodifiableSet());
         return RelyingParty.builder()
                 .identity(identity)
