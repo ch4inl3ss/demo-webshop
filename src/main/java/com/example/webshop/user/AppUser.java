@@ -28,6 +28,9 @@ public class AppUser {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "passkey_handle", length = 64)
+    private String passkeyHandle;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
@@ -60,6 +63,14 @@ public class AppUser {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getPasskeyHandle() {
+        return passkeyHandle;
+    }
+
+    public void setPasskeyHandle(String passkeyHandle) {
+        this.passkeyHandle = passkeyHandle;
     }
 
     public Set<String> getRoles() {

@@ -30,6 +30,18 @@
                             <button type="submit" class="btn btn-primary">Einloggen</button>
                         </div>
                     </form>
+                    <div id="passkey-section" class="mt-4">
+                        <div class="alert alert-info d-none" id="passkey-message"></div>
+                        <p class="text-muted small mb-2">Passkeys ermöglichen einen sicheren Login ohne Passwort.</p>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-outline-primary" id="passkey-login-btn">
+                                Mit Passkey anmelden
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="passkey-register-btn">
+                                Passkey hinzufügen
+                            </button>
+                        </div>
+                    </div>
                     <p class="mt-3 text-center">
                         Noch kein Konto?
                         <a th:href="@{/register}">Jetzt registrieren</a>
@@ -45,5 +57,153 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+<script>
+    const base64urlToBuffer = (value) => {
+        const padding = '='.repeat((4 - (value.length % 4)) % 4);
+        const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const str = atob(base64);
+        const bytes = new Uint8Array(str.length);
+        for (let i = 0; i < str.length; i++) {
+            bytes[i] = str.charCodeAt(i);
+        }
+        return bytes.buffer;
+    };
+
+    const bufferToBase64url = (buffer) => {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        bytes.forEach((b) => binary += String.fromCharCode(b));
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    };
+
+    const prepareOptions = (options) => {
+        const copy = JSON.parse(JSON.stringify(options));
+        copy.challenge = base64urlToBuffer(copy.challenge);
+        if (copy.user && copy.user.id) {
+            copy.user.id = base64urlToBuffer(copy.user.id);
+        }
+        if (copy.excludeCredentials) {
+            copy.excludeCredentials = copy.excludeCredentials.map((cred) => ({
+                ...cred,
+                id: base64urlToBuffer(cred.id)
+            }));
+        }
+        if (copy.allowCredentials) {
+            copy.allowCredentials = copy.allowCredentials.map((cred) => ({
+                ...cred,
+                id: base64urlToBuffer(cred.id)
+            }));
+        }
+        if (copy.extensions && copy.extensions.appidExclude) {
+            copy.extensions.appidExclude = base64urlToBuffer(copy.extensions.appidExclude);
+        }
+        return copy;
+    };
+
+    const serializeCredential = (credential) => {
+        const response = credential.response;
+        const serialized = {
+            id: credential.id,
+            type: credential.type,
+            rawId: bufferToBase64url(credential.rawId),
+            response: {
+                clientDataJSON: bufferToBase64url(response.clientDataJSON)
+            },
+            clientExtensionResults: credential.getClientExtensionResults()
+        };
+        if (response.attestationObject) {
+            serialized.response.attestationObject = bufferToBase64url(response.attestationObject);
+        }
+        if (response.authenticatorData) {
+            serialized.response.authenticatorData = bufferToBase64url(response.authenticatorData);
+        }
+        if (response.signature) {
+            serialized.response.signature = bufferToBase64url(response.signature);
+        }
+        if (response.userHandle) {
+            serialized.response.userHandle = bufferToBase64url(response.userHandle);
+        }
+        return serialized;
+    };
+
+    const updatePasskeyMessage = (message, type = 'info') => {
+        const box = document.getElementById('passkey-message');
+        box.classList.remove('d-none', 'alert-info', 'alert-danger', 'alert-success');
+        box.classList.add(`alert-${type}`);
+        box.textContent = message;
+    };
+
+    const clearPasskeyMessage = () => {
+        const box = document.getElementById('passkey-message');
+        box.classList.add('d-none');
+    };
+
+    const callJson = async (url, payload) => {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || 'Fehler beim Aufruf');
+        }
+        return response.json();
+    };
+
+    const startPasskeyRegistration = async () => {
+        clearPasskeyMessage();
+        const email = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        if (!email || !password) {
+            updatePasskeyMessage('Bitte gib zuerst E-Mail und Passwort ein.', 'danger');
+            return;
+        }
+        try {
+            const start = await callJson('/api/passkeys/register/start', {email, password});
+            const credential = await navigator.credentials.create({publicKey: prepareOptions(start.publicKey)});
+            await callJson('/api/passkeys/register/finish', {
+                requestId: start.requestId,
+                credential: serializeCredential(credential)
+            });
+            updatePasskeyMessage('Passkey wurde gespeichert.', 'success');
+        } catch (error) {
+            updatePasskeyMessage('Passkey konnte nicht gespeichert werden.', 'danger');
+            console.error(error);
+        }
+    };
+
+    const startPasskeyLogin = async () => {
+        clearPasskeyMessage();
+        const email = document.getElementById('username').value;
+        if (!email) {
+            updatePasskeyMessage('Bitte gib deine E-Mail ein, um einen Passkey zu verwenden.', 'danger');
+            return;
+        }
+        try {
+            const start = await callJson('/api/passkeys/login/start', {email});
+            const assertion = await navigator.credentials.get({publicKey: prepareOptions(start.publicKey)});
+            await callJson('/api/passkeys/login/finish', {
+                requestId: start.requestId,
+                credential: serializeCredential(assertion)
+            });
+            window.location.href = '/';
+        } catch (error) {
+            updatePasskeyMessage('Passkey-Anmeldung fehlgeschlagen.', 'danger');
+            console.error(error);
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const section = document.getElementById('passkey-section');
+        if (!window.PublicKeyCredential) {
+            section.classList.add('d-none');
+            return;
+        }
+        document.getElementById('passkey-login-btn').addEventListener('click', startPasskeyLogin);
+        document.getElementById('passkey-register-btn').addEventListener('click', startPasskeyRegistration);
+    });
+</script>
 </body>
 </html>
