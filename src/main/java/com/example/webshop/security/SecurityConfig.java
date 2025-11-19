@@ -14,6 +14,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -26,25 +28,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/", "/products/**", "/login", "/register",
-                                "/css/**", "/js/**", "/images/**", "/webjars/**"
-                        ).permitAll()
-                        .requestMatchers("/api/products/**", "/actuator/health").permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                        .anyRequest().authenticated()
+        return http.authorizeHttpRequests( ht -> ht.anyRequest().authenticated())
+                .formLogin(withDefaults())
+                .webAuthn(webauth ->
+                                webauth.allowedOrigins("http://localhost:8080")
+                                .rpId("localhost")
+                                .rpName("webshopname")
                 )
-                .httpBasic(Customizer.withDefaults())
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/", false)
-                        .permitAll()
-                )
-                .logout(logout -> logout.logoutSuccessUrl("/login?logout"));
-        return http.build();
+                .build();
     }
 
     @Bean

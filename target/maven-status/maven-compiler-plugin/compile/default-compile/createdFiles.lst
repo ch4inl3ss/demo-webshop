@@ -1,0 +1,15 @@
+com/example/webshop/security/UserAlreadyExistsException.class
+com/example/webshop/product/ProductRepository.class
+com/example/webshop/DataInitializer.class
+com/example/webshop/product/ProductController.class
+com/example/webshop/WebshopApplication.class
+com/example/webshop/security/SecurityConfig.class
+com/example/webshop/web/ShopController.class
+com/example/webshop/product/ProductNotFoundException.class
+com/example/webshop/user/RegisterRequest.class
+com/example/webshop/user/AppUser.class
+com/example/webshop/product/ProductRequest.class
+com/example/webshop/user/AppUserRepository.class
+com/example/webshop/web/RegistrationForm.class
+com/example/webshop/product/Product.class
+com/example/webshop/security/AuthController.class

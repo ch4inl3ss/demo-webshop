@@ -1,0 +1,15 @@
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/DataInitializer.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/WebshopApplication.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/product/Product.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/product/ProductController.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/product/ProductNotFoundException.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/product/ProductRepository.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/product/ProductRequest.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/security/AuthController.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/security/SecurityConfig.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/security/UserAlreadyExistsException.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/user/AppUser.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/user/AppUserRepository.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/user/RegisterRequest.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/web/RegistrationForm.java
+/Users/felixschumacher/git/demo-webshop/src/main/java/com/example/webshop/web/ShopController.java
