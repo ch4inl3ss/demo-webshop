@@ -1,6 +1,9 @@
 package com.example.webshop.security;
 
 import com.example.webshop.user.AppUserRepository;
+import com.example.webshop.security.passkey.PasskeyService;
+import com.example.webshop.security.passkey.auth.PasskeyAuthenticationFilter;
+import com.example.webshop.security.passkey.auth.PasskeyAuthenticationProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableMethodSecurity
@@ -25,7 +29,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   PasskeyAuthenticationFilter passkeyAuthenticationFilter,
+                                                   PasskeyAuthenticationProvider passkeyAuthenticationProvider) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
@@ -35,6 +41,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/products/**", "/actuator/health").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/passkeys/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
@@ -43,7 +50,9 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/", false)
                         .permitAll()
                 )
-                .logout(logout -> logout.logoutSuccessUrl("/login?logout"));
+                .logout(logout -> logout.logoutSuccessUrl("/login?logout"))
+                .authenticationProvider(passkeyAuthenticationProvider)
+                .addFilterBefore(passkeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -65,5 +74,16 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasskeyAuthenticationProvider passkeyAuthenticationProvider(PasskeyService passkeyService,
+                                                                        UserDetailsService userDetailsService) {
+        return new PasskeyAuthenticationProvider(passkeyService, userDetailsService);
+    }
+
+    @Bean
+    public PasskeyAuthenticationFilter passkeyAuthenticationFilter(AuthenticationManager authenticationManager) {
+        return new PasskeyAuthenticationFilter(authenticationManager);
     }
 }
