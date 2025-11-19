@@ -4,7 +4,7 @@ import com.example.webshop.user.AppUser;
 import com.example.webshop.user.AppUserRepository;
 import com.yubico.webauthn.CredentialRepository;
 import com.yubico.webauthn.data.ByteArray;
-import com.yubico.webauthn.data.RegisteredCredential;
+import com.yubico.webauthn.RegisteredCredential;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
