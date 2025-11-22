@@ -42,6 +42,7 @@ Die Anwendung verwendet automatisch das Profil `docker` und verbindet sich mit d
 - `POST /api/products` – Neues Produkt anlegen (nur Rolle `ADMIN`)
 - `POST /api/auth/register` – Neues Kundenkonto registrieren
 - `POST /api/auth/login` – Login mit Basic-Auth-Credentials validieren
+- `POST /api/passkeys/register/*` & `/api/passkeys/login/*` – Passkey-Registrierung und -Login (siehe unten)
 
 ### Standard-Accounts
 
@@ -62,3 +63,13 @@ Das Skript erzeugt `webshop-docker.zip`, welches den gesamten Projektstand (ohne
 ```bash
 mvn test
 ```
+
+## Passkey Login
+
+Der Login-Flow unterstützt passwortlose Passkeys, die direkt im Browser erzeugt werden. Der Ablauf:
+
+1. Auf der Login-Seite E-Mail + Gerätename eingeben und auf „Passkey erstellen" klicken.
+2. Der Browser erzeugt ein Schlüsselpaar, meldet den öffentlichen Schlüssel beim Backend an und speichert den privaten Schlüssel lokal.
+3. Für einen Login wird über „Mit Passkey einloggen" automatisch eine Challenge signiert und an `/api/passkeys/login` geschickt.
+
+Die privaten Schlüssel verlassen das Gerät nie. Für Tests auf einem neuen Gerät muss der Passkey erneut erzeugt werden.
