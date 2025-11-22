@@ -19,6 +19,11 @@ spring:
 logging:
   level:
     org.springframework.security: INFO
+passkeys:
+  rp-id: localhost
+  rp-name: Nerdshirts Passkeys
+  origins:
+    - http://localhost:8080
 ---
 spring:
   config:
@@ -38,3 +43,8 @@ spring:
   sql:
     init:
       mode: never
+passkeys:
+  rp-id: demo-webshop
+  rp-name: Nerdshirts Passkeys
+  origins:
+    - https://demo-webshop.local
