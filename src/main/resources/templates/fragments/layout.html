@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' | Nerdshirts'">Nerdshirts</title>
+    <link rel="stylesheet" th:href="@{/css/shop.css}">
+</head>
+
+<body>
+
+<header class="site-header" th:fragment="header">
+    <div class="container">
+        <a class="brand" th:href="@{/}"><span class="brand-prompt">&gt;_</span>nerdshirts<span class="brand-cursor"></span></a>
+        <nav class="nav">
+            <a class="nav-link" th:href="@{/}">Shop</a>
+            <a class="nav-link" th:href="@{/login}" sec:authorize="!isAuthenticated()">Login</a>
+            <a class="btn btn-small" th:href="@{/register}" sec:authorize="!isAuthenticated()">Registrieren</a>
+            <div class="nav-user" sec:authorize="isAuthenticated()">
+                <span sec:authentication="name">kunde@example.com</span>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="nav-link">Logout</button>
+                </form>
+                <span class="avatar" th:text="${#strings.substring(#authentication.name, 0, 1)}">K</span>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<footer class="site-footer" th:fragment="footer">
+    <div class="container">
+        <span>Nerdshirts – ein Demo-Shop, hier wird nichts verkauft.</span>
+        <code>Passkeys integrieren · Teil 2</code>
+    </div>
+</footer>
+
+</body>
+</html>
