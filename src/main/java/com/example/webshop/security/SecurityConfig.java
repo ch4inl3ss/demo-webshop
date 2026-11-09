@@ -4,7 +4,6 @@ import com.example.webshop.user.AppUserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,8 +18,6 @@ import org.springframework.security.web.webauthn.management.JdbcUserCredentialRe
 import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
 import org.springframework.security.web.webauthn.management.UserCredentialRepository;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -33,13 +30,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.authorizeHttpRequests( ht -> ht.anyRequest().authenticated())
-                .formLogin(withDefaults())
-                .webAuthn(webauth ->
-                                webauth.allowedOrigins("http://localhost:8080")
-                                .rpId("localhost")
-                                .rpName("webshopname")
-                )
+        return http
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/products/**", "/register", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .formLogin(form -> form.loginPage("/login").permitAll())
+                .webAuthn(webAuthn -> webAuthn
+                        .rpName("Nerdshirts")
+                        .rpId("localhost")
+                        .allowedOrigins("http://localhost:8080"))
+                .logout(logout -> logout.logoutSuccessUrl("/login?logout").permitAll())
                 .build();
     }
 

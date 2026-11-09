@@ -10,6 +10,15 @@
         <div th:if="${param.error}" class="alert alert-error">Falsche E-Mail oder Passwort.</div>
         <div th:if="${param.logout}" class="alert alert-info">Du wurdest ausgeloggt.</div>
         <div th:if="${param.registered}" class="alert alert-success">Registrierung erfolgreich. Bitte melde dich jetzt an.</div>
+        <button type="button" id="passkey-login" class="btn btn-accent btn-block">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4"/><path d="m18 5 2 2"/><path d="m15 8 2 2"/>
+            </svg>
+            Mit Passkey anmelden
+        </button>
+        <div id="passkey-error" class="alert alert-error" hidden>Login mit Passkey hat nicht geklappt.</div>
+        <div class="divider">oder mit Passwort</div>
         <form method="post" th:action="@{/login}">
             <div class="field">
                 <label for="username">E-Mail</label>
@@ -19,7 +28,7 @@
                 <label for="password">Passwort</label>
                 <input type="password" id="password" name="password" autocomplete="current-password" required>
             </div>
-            <button type="submit" class="btn btn-block">Einloggen</button>
+            <button type="submit" class="btn btn-ghost btn-block">Einloggen</button>
         </form>
         <p class="auth-footer">
             Noch kein Konto? <a th:href="@{/register}">Jetzt registrieren</a>
@@ -27,5 +36,6 @@
     </div>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/passkey-login.js}"></script>
 </body>
 </html>
