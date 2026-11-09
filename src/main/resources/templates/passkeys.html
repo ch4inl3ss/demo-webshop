@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Passkeys')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container account">
+    <span class="eyebrow">// mein konto</span>
+    <h1>Deine Passkeys</h1>
+    <p class="lead">Mit einem Passkey meldest du dich ohne Passwort an – per Touch ID, Face ID oder Sicherheitsschlüssel.
+        Lege am besten mehrere an, dann bleibt dein Konto erreichbar, wenn ein Gerät verloren geht.</p>
+
+    <div th:if="${param.hinzugefuegt}" class="alert alert-success">Passkey hinzugefügt.</div>
+    <div th:if="${param.geloescht}" class="alert alert-info">Passkey gelöscht.</div>
+
+    <ul id="passkey-list" class="passkey-list" th:attr="data-user-handle=${userHandle}">
+        <li class="passkey" th:each="passkey : ${passkeys}" th:attr="data-credential-id=${passkey.id}">
+            <div class="passkey-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="8" cy="15" r="4"/><path d="M10.85 12.15 19 4"/><path d="m18 5 2 2"/><path d="m15 8 2 2"/>
+                </svg>
+            </div>
+            <div class="passkey-info">
+                <form class="passkey-rename" method="post" th:action="@{/konto/passkeys/{id}/umbenennen(id=${passkey.id})}">
+                    <input name="label" th:value="${passkey.label}" aria-label="Name des Passkeys" required>
+                    <button type="submit" class="nav-link">Speichern</button>
+                </form>
+                <div class="passkey-meta">
+                    <span class="badge" th:classappend="${passkey.synced} ? 'badge-sync' : 'badge-device'"
+                          th:text="${passkey.synced} ? 'synchronisiert' : 'gerätegebunden'">synchronisiert</span>
+                    <span th:text="'angelegt ' + ${#temporals.format(passkey.created, 'dd.MM.yyyy')}">angelegt 09.11.2026</span>
+                    <span th:if="${passkey.lastUsed}"
+                          th:text="'zuletzt benutzt ' + ${#temporals.format(passkey.lastUsed, 'dd.MM.yyyy, HH:mm')}">zuletzt benutzt</span>
+                </div>
+            </div>
+            <form method="post" th:action="@{/konto/passkeys/{id}/loeschen(id=${passkey.id})}">
+                <button type="submit" class="btn btn-ghost btn-small">Löschen</button>
+            </form>
+        </li>
+        <li class="passkey passkey-empty" th:if="${#lists.isEmpty(passkeys)}">
+            Noch keine Passkeys. Leg jetzt deinen ersten an!
+        </li>
+    </ul>
+
+    <form id="passkey-add" class="passkey-add">
+        <div class="field">
+            <label for="label">Neuer Passkey</label>
+            <input id="label" name="label" placeholder="z. B. MacBook, iPhone, YubiKey" required>
+        </div>
+        <button type="submit" class="btn btn-accent">Passkey hinzufügen</button>
+    </form>
+    <div id="passkey-error" class="alert alert-error" hidden>Passkey konnte nicht angelegt werden.</div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/passkey-register.js}"></script>
+</body>
+</html>

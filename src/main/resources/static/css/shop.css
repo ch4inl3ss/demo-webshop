@@ -548,3 +548,136 @@ img {
 #passkey-error {
     margin: 16px 0 0;
 }
+
+/* Passkey-Verwaltung */
+
+.account {
+    max-width: 760px;
+    padding: 56px 0 96px;
+}
+
+.account h1 {
+    margin: 0 0 12px;
+    font-size: clamp(32px, 4vw, 44px);
+    letter-spacing: -.03em;
+}
+
+.account .lead {
+    margin: 0 0 32px;
+    color: var(--muted);
+}
+
+.passkey-list {
+    margin: 0 0 32px;
+    padding: 0;
+    list-style: none;
+    border-radius: var(--radius);
+    background: var(--card);
+    box-shadow: var(--shadow);
+}
+
+.passkey {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+}
+
+.passkey:last-child {
+    border-bottom: 0;
+}
+
+.passkey form {
+    margin: 0;
+}
+
+.passkey-empty {
+    color: var(--muted);
+}
+
+.passkey-icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--paper);
+    color: var(--accent);
+}
+
+.passkey-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.passkey-rename {
+    display: flex;
+    gap: 4px;
+}
+
+.passkey-rename input {
+    flex: 1;
+    min-width: 0;
+    padding: 2px 6px;
+    margin-left: -6px;
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    font: inherit;
+    font-weight: 700;
+}
+
+.passkey-rename input:hover,
+.passkey-rename input:focus {
+    outline: none;
+    border-color: var(--line);
+    background: var(--paper);
+}
+
+.passkey-rename button {
+    visibility: hidden;
+    font-size: 14px;
+}
+
+.passkey-rename:focus-within button {
+    visibility: visible;
+}
+
+.passkey-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.badge {
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-sync {
+    background: #e6f0ff;
+    color: #2457c5;
+}
+
+.badge-device {
+    background: #fff1e6;
+    color: #b4501b;
+}
+
+.passkey-add {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.passkey-add .field {
+    flex: 1;
+    margin: 0;
+}
