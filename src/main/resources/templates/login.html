@@ -21,11 +21,25 @@
             </div>
             <button type="submit" class="btn btn-block">Einloggen</button>
         </form>
+        <p class="subtitle">oder</p>
+        <button type="button" id="passkey-signin" class="btn btn-block"
+                th:data-csrf-header="${_csrf.headerName}" th:data-csrf-token="${_csrf.token}"
+                th:data-context-path="@{/}">Mit Passkey einloggen</button>
         <p class="auth-footer">
             Noch kein Konto? <a th:href="@{/register}">Jetzt registrieren</a>
         </p>
     </div>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+<!-- Client-Skript liefert Spring Security selbst aus (DefaultResourcesFilter) -->
+<script th:src="@{/login/webauthn.js}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const button = document.getElementById('passkey-signin');
+        const csrfHeaders = { [button.dataset.csrfHeader]: button.dataset.csrfToken };
+        const contextPath = button.dataset.contextPath.replace(/\/$/, '');
+        setupLogin(csrfHeaders, contextPath, button);
+    });
+</script>
 </body>
 </html>

@@ -15,7 +15,12 @@ spring:
       enabled: true
   sql:
     init:
-      mode: never
+      mode: always
+webshop:
+  webauthn:
+    rp-id: localhost
+    rp-name: Nerdshirts
+    allowed-origins: http://localhost:8082
 logging:
   level:
     org.springframework.security: INFO
@@ -37,4 +42,4 @@ spring:
         format_sql: true
   sql:
     init:
-      mode: never
+      mode: always

@@ -1,6 +1,7 @@
 package com.example.webshop.security;
 
 import com.example.webshop.user.AppUserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,8 +12,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.webauthn.management.JdbcPublicKeyCredentialUserEntityRepository;
+import org.springframework.security.web.webauthn.management.JdbcUserCredentialRepository;
+import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
+import org.springframework.security.web.webauthn.management.UserCredentialRepository;
+
+import java.util.Set;
 
 @Configuration
 @EnableMethodSecurity
@@ -25,9 +33,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   @Value("${webshop.webauthn.rp-id}") String rpId,
+                                                   @Value("${webshop.webauthn.rp-name}") String rpName,
+                                                   @Value("${webshop.webauthn.allowed-origins}") Set<String> allowedOrigins) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                // CSRF wieder aktiv: die WebAuthn-Endpunkte (/webauthn/**, /login/webauthn) sind
+                // session-basierte POSTs. Nur die JSON-API bleibt ausgenommen.
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/", "/products/**", "/login", "/register",
@@ -43,6 +56,16 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/", false)
                         .permitAll()
                 )
+                // Passkeys mit den Bordmitteln von Spring Security (ab 6.4):
+                // - POST /webauthn/register/options, POST /webauthn/register  (Registrierung)
+                // - GET  /webauthn/register  (Default-Seite zum Verwalten der Passkeys)
+                // - POST /webauthn/authenticate/options, POST /login/webauthn  (Login)
+                // - GET  /login/webauthn.js  (Client-Skript)
+                .webAuthn(webAuthn -> webAuthn
+                        .rpId(rpId)
+                        .rpName(rpName)
+                        .allowedOrigins(allowedOrigins)
+                )
                 .logout(logout -> logout.logoutSuccessUrl("/login?logout"));
         return http.build();
     }
@@ -55,6 +78,18 @@ public class SecurityConfig {
                         .authorities(user.getRoles().toArray(String[]::new))
                         .build())
                 .orElseThrow(() -> new UsernameNotFoundException("Benutzer nicht gefunden"));
+    }
+
+    // Passkeys in der Datenbank statt nur im Speicher (Default: Map-basiert, weg nach Neustart).
+    // Tabellen: siehe schema-*.sql (aus den Schema-Dateien von Spring Security uebernommen).
+    @Bean
+    public PublicKeyCredentialUserEntityRepository userEntityRepository(JdbcOperations jdbc) {
+        return new JdbcPublicKeyCredentialUserEntityRepository(jdbc);
+    }
+
+    @Bean
+    public UserCredentialRepository userCredentialRepository(JdbcOperations jdbc) {
+        return new JdbcUserCredentialRepository(jdbc);
     }
 
     @Bean
