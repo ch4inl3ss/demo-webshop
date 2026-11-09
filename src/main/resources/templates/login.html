@@ -7,6 +7,7 @@
     <div class="auth-card">
         <h1>Willkommen zurück</h1>
         <p class="subtitle">Melde dich an, um weiterzushoppen.</p>
+        <div th:if="${param['factor.type']}" class="alert alert-info">Dieser Bereich braucht eine frische Bestätigung mit deinem Passkey.</div>
         <div th:if="${param.error}" class="alert alert-error">Falsche E-Mail oder Passwort.</div>
         <div th:if="${param.logout}" class="alert alert-info">Du wurdest ausgeloggt.</div>
         <div th:if="${param.registered}" class="alert alert-success">Registrierung erfolgreich. Bitte melde dich jetzt an.</div>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container account">
+    <span class="eyebrow">// admin</span>
+    <h1>Admin-Bereich</h1>
+    <p class="lead">Nur erreichbar mit einer Passkey-Bestätigung, die höchstens fünf Minuten alt ist.</p>
+
+    <ul class="passkey-list">
+        <li class="passkey" th:each="factor : ${factors}">
+            <div class="passkey-info">
+                <strong th:text="${factor.authority}">FACTOR_WEBAUTHN</strong>
+                <div class="passkey-meta" th:text="'angemeldet ' + ${#temporals.format(factor.issuedAt, 'dd.MM.yyyy, HH:mm:ss')}">angemeldet</div>
+            </div>
+        </li>
+    </ul>
+
+    <ul class="passkey-list">
+        <li class="passkey" th:each="product : ${products}">
+            <div class="passkey-info">
+                <strong th:text="${product.name}">Produkt</strong>
+                <div class="passkey-meta" th:text="${#numbers.formatDecimal(product.price, 1, 'POINT', 2, 'COMMA')} + ' €'">19,99 €</div>
+            </div>
+        </li>
+    </ul>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

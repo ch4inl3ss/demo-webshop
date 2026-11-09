@@ -13,7 +13,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.security.authorization.AllRequiredFactorsAuthorizationManager;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.authorization.AuthorizationManagers;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.time.Duration;
+
+import static org.springframework.security.authorization.AuthorityAuthorizationManager.hasRole;
 import org.springframework.security.web.webauthn.management.JdbcPublicKeyCredentialUserEntityRepository;
 import org.springframework.security.web.webauthn.management.JdbcUserCredentialRepository;
 import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
@@ -35,7 +43,7 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/products/**", "/register", "/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").access(AuthorizationManagers.allOf(hasRole("ADMIN"), recentPasskey()))
                         .anyRequest().authenticated())
                 .formLogin(form -> form.loginPage("/login").permitAll())
                 .webAuthn(webAuthn -> webAuthn
@@ -43,6 +51,13 @@ public class SecurityConfig {
                         .rpId(passkeys.rpId())
                         .allowedOrigins(passkeys.allowedOrigins()))
                 .logout(logout -> logout.logoutSuccessUrl("/login?logout").permitAll())
+                .build();
+    }
+
+    // Step-up: Admin nur mit Passkey-Anmeldung, die höchstens 5 Minuten alt ist
+    private static AuthorizationManager<RequestAuthorizationContext> recentPasskey() {
+        return AllRequiredFactorsAuthorizationManager.<RequestAuthorizationContext>builder()
+                .requireFactor(factor -> factor.webauthnAuthority().validDuration(Duration.ofMinutes(5)))
                 .build();
     }
 
