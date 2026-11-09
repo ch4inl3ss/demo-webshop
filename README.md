@@ -62,3 +62,21 @@ Das Skript erzeugt `webshop-docker.zip`, welches den gesamten Projektstand (ohne
 ```bash
 mvn test
 ```
+
+## Passkeys auf einer echten Domain (z. B. Demo mit dem iPhone)
+
+WebAuthn braucht HTTPS (nur `localhost` ist ausgenommen). Die Domain, an die die Passkeys
+gebunden sind, kommt aus der Konfiguration:
+
+```bash
+docker compose up -d db
+NERDSHIRTS_PASSKEYS_RP_ID=shop.example.org \
+NERDSHIRTS_PASSKEYS_ALLOWED_ORIGINS=https://shop.example.org \
+java -jar target/webshop-0.0.1-SNAPSHOT.jar
+```
+
+Davor ein TLS-Tunnel oder Reverse Proxy, der auf `localhost:8080` zeigt und `X-Forwarded-*` setzt
+(`server.forward-headers-strategy: framework` ist aktiv).
+
+Wichtig: Die Domain muss **fest** sein. Ein Tunnel mit zufälliger Domain pro Start macht alle
+registrierten Passkeys beim nächsten Start unbrauchbar – die RP-ID ist Teil jedes Passkeys.

@@ -1,6 +1,7 @@
 package com.example.webshop.security;
 
 import com.example.webshop.user.AppUserRepository;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +21,7 @@ import org.springframework.security.web.webauthn.management.UserCredentialReposi
 
 @Configuration
 @EnableMethodSecurity
+@EnableConfigurationProperties(PasskeyProperties.class)
 public class SecurityConfig {
 
     private final AppUserRepository userRepository;
@@ -29,7 +31,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, PasskeyProperties passkeys) throws Exception {
         return http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/products/**", "/register", "/css/**", "/js/**", "/images/**").permitAll()
@@ -38,8 +40,8 @@ public class SecurityConfig {
                 .formLogin(form -> form.loginPage("/login").permitAll())
                 .webAuthn(webAuthn -> webAuthn
                         .rpName("Nerdshirts")
-                        .rpId("localhost")
-                        .allowedOrigins("http://localhost:8080"))
+                        .rpId(passkeys.rpId())
+                        .allowedOrigins(passkeys.allowedOrigins()))
                 .logout(logout -> logout.logoutSuccessUrl("/login?logout").permitAll())
                 .build();
     }
