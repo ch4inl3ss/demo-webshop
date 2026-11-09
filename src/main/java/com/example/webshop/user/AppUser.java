@@ -28,6 +28,10 @@ public class AppUser {
     @Column(nullable = false)
     private String password;
 
+    /** WebAuthn user handle (base64url, 32 random bytes) – bewusst NICHT die E-Mail oder die DB-ID. */
+    @Column(name = "webauthn_user_handle", unique = true)
+    private String webauthnUserHandle;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
@@ -60,6 +64,14 @@ public class AppUser {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getWebauthnUserHandle() {
+        return webauthnUserHandle;
+    }
+
+    public void setWebauthnUserHandle(String webauthnUserHandle) {
+        this.webauthnUserHandle = webauthnUserHandle;
     }
 
     public Set<String> getRoles() {

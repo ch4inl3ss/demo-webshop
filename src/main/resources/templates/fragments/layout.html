@@ -19,7 +19,7 @@
             <a class="nav-link" th:href="@{/login}" sec:authorize="!isAuthenticated()">Login</a>
             <a class="btn btn-small" th:href="@{/register}" sec:authorize="!isAuthenticated()">Registrieren</a>
             <div class="nav-user" sec:authorize="isAuthenticated()">
-                <span sec:authentication="name">kunde@example.com</span>
+                <a class="nav-link" th:href="@{/account}" sec:authentication="name">kunde@example.com</a>
                 <form th:action="@{/logout}" method="post">
                     <button type="submit" class="nav-link">Logout</button>
                 </form>

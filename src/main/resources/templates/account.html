@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mein Konto')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="auth container">
+    <div class="auth-card">
+        <h1>Passkeys</h1>
+        <p class="subtitle">Melde dich künftig ohne Passwort an.</p>
+        <div id="passkey-message" class="alert" hidden></div>
+        <ul id="passkey-list">
+            <li th:each="pk : ${passkeys}" class="passkey-item">
+                <strong th:text="${pk.label}">Passkey</strong>
+                <small th:text="${'angelegt ' + pk.createdAt}"></small>
+            </li>
+            <li th:if="${#lists.isEmpty(passkeys)}" id="no-passkeys">Noch kein Passkey registriert.</li>
+        </ul>
+        <button type="button" id="register-passkey" class="btn btn-block">Passkey hinzufügen</button>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script th:src="@{/js/passkeys.js}"></script>
+</body>
+</html>

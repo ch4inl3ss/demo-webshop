@@ -35,6 +35,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/products/**", "/actuator/health").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers("/passkeys/login", "/passkeys/login/options").permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
