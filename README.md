@@ -63,20 +63,28 @@ Das Skript erzeugt `webshop-docker.zip`, welches den gesamten Projektstand (ohne
 mvn test
 ```
 
-## Passkeys auf einer echten Domain (z. B. Demo mit dem iPhone)
+## Login über Keycloak (Branch `step-6-keycloak`)
 
-WebAuthn braucht HTTPS (nur `localhost` ist ausgenommen). Die Domain, an die die Passkeys
-gebunden sind, kommt aus der Konfiguration:
+Ab diesem Schritt kennt der Shop keine Passwörter und keine Passkeys mehr. Er ist OIDC-Client,
+Login, Registrierung und Passkeys macht Keycloak.
 
 ```bash
-docker compose up -d db
-NERDSHIRTS_PASSKEYS_RP_ID=shop.example.org \
-NERDSHIRTS_PASSKEYS_ALLOWED_ORIGINS=https://shop.example.org \
-java -jar target/webshop-0.0.1-SNAPSHOT.jar
+docker compose up -d db keycloak   # Keycloak importiert keycloak/nerdshirts-realm.json beim ersten Start
+mvn spring-boot:run
 ```
 
-Davor ein TLS-Tunnel oder Reverse Proxy, der auf `localhost:8080` zeigt und `X-Forwarded-*` setzt
-(`server.forward-headers-strategy: framework` ist aktiv).
+- Shop: `http://localhost:8080`, "Anmelden" leitet zu Keycloak weiter
+- Keycloak-Admin-Konsole: `http://localhost:8180/admin/master/console/#/nerdshirts` (`admin` / `admin`)
+- Nutzer: `admin@nerdshirts.de` (Rolle `ADMIN`, muss beim ersten Login einen Passkey anlegen) und `kunde@example.com`, beide mit Passwort `changeme`
+- Passkeys verwalten: Keycloak-Account-Konsole, verlinkt als "Passkeys" in der Navigation
 
-Wichtig: Die Domain muss **fest** sein. Ein Tunnel mit zufälliger Domain pro Start macht alle
-registrierten Passkeys beim nächsten Start unbrauchbar – die RP-ID ist Teil jedes Passkeys.
+Den Realm-Import greift Keycloak nur beim ersten Start. Zurücksetzen auf den Stand der Datei:
+
+```bash
+docker compose rm -sf keycloak && docker volume rm demo-webshop_keycloak-data && docker compose up -d keycloak
+```
+
+Die Passkeys gehören jetzt zu Keycloak (RP-ID = Domain von Keycloak, hier `localhost`).
+Für eine echte Domain müssen Keycloak (`KC_HOSTNAME`) und die URLs im Realm (Redirect-URI,
+Web Origins) und in der `application.yml` (`issuer-uri`) angepasst werden.
+

@@ -1,93 +1,58 @@
 package com.example.webshop.security;
 
-import com.example.webshop.user.AppUserRepository;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.jdbc.core.JdbcOperations;
-import org.springframework.security.authorization.AllRequiredFactorsAuthorizationManager;
-import org.springframework.security.authorization.AuthorizationManager;
-import org.springframework.security.authorization.AuthorizationManagers;
-import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 
-import java.time.Duration;
-
-import static org.springframework.security.authorization.AuthorityAuthorizationManager.hasRole;
-import org.springframework.security.web.webauthn.management.JdbcPublicKeyCredentialUserEntityRepository;
-import org.springframework.security.web.webauthn.management.JdbcUserCredentialRepository;
-import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
-import org.springframework.security.web.webauthn.management.UserCredentialRepository;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties(PasskeyProperties.class)
 public class SecurityConfig {
 
-    private final AppUserRepository userRepository;
-
-    public SecurityConfig(AppUserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
+    // Login, Passwörter und Passkeys macht Keycloak. Der Shop ist nur noch OIDC-Client.
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, PasskeyProperties passkeys) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, ClientRegistrationRepository clients) throws Exception {
         return http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/products/**", "/register", "/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/admin/**").access(AuthorizationManagers.allOf(hasRole("ADMIN"), recentPasskey()))
+                        .requestMatchers("/", "/products/**", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
-                .formLogin(form -> form.loginPage("/login").permitAll())
-                .webAuthn(webAuthn -> webAuthn
-                        .rpName("Nerdshirts")
-                        .rpId(passkeys.rpId())
-                        .allowedOrigins(passkeys.allowedOrigins()))
-                .logout(logout -> logout.logoutSuccessUrl("/login?logout").permitAll())
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userAuthoritiesMapper(keycloakRoles())))
+                .logout(logout -> logout.logoutSuccessHandler(keycloakLogout(clients)))
                 .build();
     }
 
-    // Step-up: Admin nur mit Passkey-Anmeldung, die höchstens 5 Minuten alt ist
-    private static AuthorizationManager<RequestAuthorizationContext> recentPasskey() {
-        return AllRequiredFactorsAuthorizationManager.<RequestAuthorizationContext>builder()
-                .requireFactor(factor -> factor.webauthnAuthority().validDuration(Duration.ofMinutes(5)))
-                .build();
+    // Realm-Rollen kommen als Claim "roles" im ID-Token (Mapper im Client, siehe keycloak/nerdshirts-realm.json)
+    private static GrantedAuthoritiesMapper keycloakRoles() {
+        return authorities -> {
+            Set<GrantedAuthority> mapped = new HashSet<>(authorities);
+            authorities.stream()
+                    .filter(OidcUserAuthority.class::isInstance)
+                    .map(OidcUserAuthority.class::cast)
+                    .map(authority -> authority.getIdToken().getClaimAsStringList("roles"))
+                    .filter(roles -> roles != null)
+                    .flatMap(List::stream)
+                    .forEach(role -> mapped.add(new SimpleGrantedAuthority("ROLE_" + role)));
+            return mapped;
+        };
     }
 
-    @Bean
-    PublicKeyCredentialUserEntityRepository userEntities(JdbcOperations jdbc) {
-        return new JdbcPublicKeyCredentialUserEntityRepository(jdbc);
-    }
-
-    @Bean
-    UserCredentialRepository userCredentials(JdbcOperations jdbc) {
-        return new JdbcUserCredentialRepository(jdbc);
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> userRepository.findByEmail(username)
-                .map(user -> org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
-                        .password(user.getPassword())
-                        .authorities(user.getRoles().toArray(String[]::new))
-                        .build())
-                .orElseThrow(() -> new UsernameNotFoundException("Benutzer nicht gefunden"));
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
+    // Logout auch bei Keycloak beenden, sonst ist man beim nächsten Klick auf "Login" sofort wieder drin
+    private static OidcClientInitiatedLogoutSuccessHandler keycloakLogout(ClientRegistrationRepository clients) {
+        OidcClientInitiatedLogoutSuccessHandler handler = new OidcClientInitiatedLogoutSuccessHandler(clients);
+        handler.setPostLogoutRedirectUri("{baseUrl}/");
+        return handler;
     }
 }

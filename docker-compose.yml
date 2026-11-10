@@ -15,6 +15,19 @@ services:
       timeout: 5s
       retries: 5
 
+  # Identity Provider: Login, Passwörter und Passkeys liegen ab jetzt hier (Admin-Konsole: http://localhost:8180, admin/admin)
+  keycloak:
+    image: keycloak/keycloak:26.8.2
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./keycloak/nerdshirts-realm.json:/opt/keycloak/data/import/nerdshirts-realm.json:ro
+
   app:
     build: .
     ports:
@@ -29,3 +42,4 @@ services:
 
 volumes:
   db-data:
+  keycloak-data:

@@ -18,14 +18,26 @@ spring:
   flyway:
     baseline-on-migrate: true
     baseline-version: 0
+  # Der Shop ist OIDC-Client von Keycloak (docker compose up keycloak), Realm siehe keycloak/nerdshirts-realm.json
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: nerdshirts
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:nerdshirts-demo-secret}
+            scope: openid, profile, email
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8180/realms/nerdshirts
+            user-name-attribute: email
 # Hinter einem TLS-Proxy/Tunnel: X-Forwarded-* auswerten, damit Redirects auf https zeigen
 server:
   forward-headers-strategy: framework
 nerdshirts:
-  passkeys:
-    # Überschreibbar per NERDSHIRTS_PASSKEYS_RP_ID / NERDSHIRTS_PASSKEYS_ALLOWED_ORIGINS
-    rp-id: localhost
-    allowed-origins: http://localhost:8080
+  keycloak:
+    # Passkeys verwaltet jetzt Keycloak: Account-Konsole, Bereich "Anmeldung"
+    account-url: http://localhost:8180/realms/nerdshirts/account/account-security/signing-in
 logging:
   level:
     org.springframework.security: INFO

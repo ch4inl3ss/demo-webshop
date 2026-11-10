@@ -18,10 +18,9 @@
         <a class="brand" th:href="@{/}"><span class="brand-prompt">&gt;_</span>nerdshirts<span class="brand-cursor"></span></a>
         <nav class="nav">
             <a class="nav-link" th:href="@{/}">Shop</a>
-            <a class="nav-link" th:href="@{/login}" sec:authorize="!isAuthenticated()">Login</a>
-            <a class="btn btn-small" th:href="@{/register}" sec:authorize="!isAuthenticated()">Registrieren</a>
+            <a class="btn btn-small" th:href="@{/oauth2/authorization/keycloak}" sec:authorize="!isAuthenticated()">Anmelden</a>
             <a class="nav-link" th:href="@{/admin}" sec:authorize="hasRole('ADMIN')">Admin</a>
-            <a class="nav-link" th:href="@{/konto/passkeys}" sec:authorize="isAuthenticated()">Passkeys</a>
+            <a class="nav-link" th:href="${keycloakAccountUrl}" sec:authorize="isAuthenticated()">Passkeys</a>
             <div class="nav-user" sec:authorize="isAuthenticated()">
                 <span sec:authentication="name">kunde@example.com</span>
                 <form th:action="@{/logout}" method="post">

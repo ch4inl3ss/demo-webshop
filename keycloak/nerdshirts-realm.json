@@ -1,0 +1,75 @@
+{
+  "realm": "nerdshirts",
+  "displayName": "Nerdshirts",
+  "enabled": true,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["de", "en"],
+  "defaultLocale": "de",
+  "webAuthnPolicyRpEntityName": "Nerdshirts",
+  "webAuthnPolicyPasswordlessRpEntityName": "Nerdshirts",
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "required",
+  "webAuthnPolicyPasswordlessResidentKey": "required",
+  "webAuthnPolicyPasswordlessPasskeysEnabled": true,
+  "roles": {
+    "realm": [
+      { "name": "ADMIN", "description": "Darf in den Admin-Bereich des Shops" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "nerdshirts",
+      "name": "Nerdshirts",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "nerdshirts-demo-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:8080/login/oauth2/code/keycloak"],
+      "webOrigins": ["http://localhost:8080"],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:8080/"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@nerdshirts.de",
+      "email": "admin@nerdshirts.de",
+      "emailVerified": true,
+      "firstName": "Ada",
+      "lastName": "Admin",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "changeme", "temporary": false }],
+      "realmRoles": ["default-roles-nerdshirts", "ADMIN"],
+      "requiredActions": ["webauthn-register-passwordless"]
+    },
+    {
+      "username": "kunde@example.com",
+      "email": "kunde@example.com",
+      "emailVerified": true,
+      "firstName": "Klara",
+      "lastName": "Kundin",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "changeme", "temporary": false }],
+      "realmRoles": ["default-roles-nerdshirts"]
+    }
+  ]
+}

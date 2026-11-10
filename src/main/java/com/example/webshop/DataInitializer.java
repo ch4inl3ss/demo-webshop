@@ -2,18 +2,14 @@ package com.example.webshop;
 
 import com.example.webshop.product.Product;
 import com.example.webshop.product.ProductRepository;
-import com.example.webshop.user.AppUser;
-import com.example.webshop.user.AppUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Set;
 
 @Configuration
 public class DataInitializer {
@@ -21,9 +17,7 @@ public class DataInitializer {
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
     @Bean
-    CommandLineRunner loadData(ProductRepository productRepository,
-                               AppUserRepository userRepository,
-                               PasswordEncoder passwordEncoder) {
+    CommandLineRunner loadData(ProductRepository productRepository) {
         return args -> {
             if (productRepository.count() == 0) {
                 List<Product> products = List.of(
@@ -78,16 +72,6 @@ public class DataInitializer {
                 );
                 productRepository.saveAll(products);
                 log.info("Beispielprodukte angelegt: {}", products.size());
-            }
-
-            if (userRepository.count() == 0) {
-                AppUser admin = new AppUser(
-                        "admin@nerdshirts.de",
-                        passwordEncoder.encode("changeme"),
-                        Set.of("ROLE_ADMIN", "ROLE_USER")
-                );
-                userRepository.save(admin);
-                log.info("Standard-Admin erstellt: {}", admin.getEmail());
             }
         };
     }

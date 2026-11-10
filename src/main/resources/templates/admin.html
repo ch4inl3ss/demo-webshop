@@ -6,13 +6,19 @@
 <main class="container account">
     <span class="eyebrow">// admin</span>
     <h1>Admin-Bereich</h1>
-    <p class="lead">Nur erreichbar mit einer Passkey-Bestätigung, die höchstens fünf Minuten alt ist.</p>
+    <p class="lead">Nur mit der Rolle <code>ADMIN</code> aus Keycloak. Das ID-Token sagt uns, wer sich wann angemeldet hat.</p>
 
     <ul class="passkey-list">
-        <li class="passkey" th:each="factor : ${factors}">
+        <li class="passkey">
             <div class="passkey-info">
-                <strong th:text="${factor.authority}">FACTOR_WEBAUTHN</strong>
-                <div class="passkey-meta" th:text="'angemeldet ' + ${#temporals.format(factor.issuedAt, 'dd.MM.yyyy, HH:mm:ss')}">angemeldet</div>
+                <strong th:text="${user.fullName}">Ada Admin</strong>
+                <div class="passkey-meta" th:text="${user.email} + ' · Rollen: ' + ${user.getClaimAsStringList('roles')}">admin@nerdshirts.de</div>
+            </div>
+        </li>
+        <li class="passkey">
+            <div class="passkey-info">
+                <strong>Anmeldung bei Keycloak</strong>
+                <div class="passkey-meta" th:text="${#temporals.format(authTime, 'dd.MM.yyyy, HH:mm:ss')} + ' · Issuer: ' + ${user.issuer}">angemeldet</div>
             </div>
         </li>
     </ul>
